@@ -240,7 +240,7 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
         return closingSequence
       }
 
-      if (size === 0) return nok(code)
+      if (size < 3) return nok(code)
 
       effects.exit('directiveContainerSequence')
       return factorySpace(effects, closingSequenceEnd, types.whitespace)(code)
@@ -254,12 +254,14 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
           return nok(code)
         }
 
-        if (size >= sizeOpen) {
+        if (size == sizeOpen) {
           effects.exit('directiveContainerFence')
           return ok(code)
+        } else {
+          console.log('expected '+sizeOpen+" closing colons, but got "+size)
+          return nok(code)
         }
       }
-
       lvl++
       return nok(code)
     }
