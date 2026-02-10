@@ -5,6 +5,7 @@
 import {codes} from 'micromark-util-symbol'
 import {directiveContainer} from './directive-container.js'
 import {directiveLeaf} from './directive-leaf.js'
+import {directiveSpan} from './directive-span.js'
 import {directiveText} from './directive-text.js'
 
 /**
@@ -16,7 +17,10 @@ import {directiveText} from './directive-text.js'
  */
 export function directive() {
   return {
-    text: {[codes.colon]: directiveText},
+    text: {
+      [codes.colon]: directiveText,
+      [codes.leftSquareBracket]: directiveSpan
+    },
     flow: {[codes.colon]: [directiveContainer, directiveLeaf]}
   }
 }

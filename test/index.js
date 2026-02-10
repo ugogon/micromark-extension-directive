@@ -384,6 +384,66 @@ test('micromark-extension-directive (syntax, text)', async function (t) {
       assert.equal(micromark(':a{b="c"', options()), '<p>{b=&quot;c&quot;</p>')
     }
   )
+
+  await t.test(
+    'should support a nameless text directive with label',
+    async function () {
+      assert.equal(
+        micromark(':[Underline]{.underline}', options({'*': h})),
+        '<p><span class="underline">Underline</span></p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a nameless text directive with label and spaces in attributes',
+    async function () {
+      assert.equal(
+        micromark(':[text]{ .underline }', options({'*': h})),
+        '<p><span class="underline">text</span></p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a bracketed span',
+    async function () {
+      assert.equal(
+        micromark('[Underline]{.underline}', options({'*': h})),
+        '<p><span class="underline">Underline</span></p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a bracketed span with spaces in attributes',
+    async function () {
+      assert.equal(
+        micromark('[text]{ .underline }', options({'*': h})),
+        '<p><span class="underline">text</span></p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should not confuse a bracketed span with a link',
+    async function () {
+      assert.equal(
+        micromark('[text](url)', options()),
+        '<p><a href="url">text</a></p>'
+      )
+    }
+  )
+
+  await t.test(
+    'should not confuse a bracketed span with a reference link',
+    async function () {
+      assert.equal(
+        micromark('[text][ref]', options()),
+        '<p>[text][ref]</p>'
+      )
+    }
+  )
 })
 
 test('micromark-extension-directive (syntax, leaf)', async function (t) {
@@ -758,7 +818,7 @@ test('micromark-extension-directive (syntax, container)', async function (t) {
   )
 
   await t.test(
-    'should not support three colons not followed by an alpha',
+    'should not support three colons without a name or attributes',
     async function () {
       assert.equal(micromark(':::', options()), '<p>:::</p>')
     }
@@ -1005,9 +1065,9 @@ test('micromark-extension-directive (syntax, container)', async function (t) {
   )
 
   await t.test(
-    'should close w/ a closing fence of more colons',
+    'should not close w/ a closing fence of more colons (exact match required)',
     async function () {
-      assert.equal(micromark(':::a\n::::\nb', options()), '<p>b</p>')
+      assert.equal(micromark(':::a\n::::\nb', options()), '')
     }
   )
 
@@ -1325,6 +1385,50 @@ test('micromark-extension-directive (syntax, container)', async function (t) {
       '<blockquote><a></a>\n</blockquote>\n<p>:::</p>'
     )
   })
+
+  await t.test(
+    'should support a nameless container with empty attributes',
+    async function () {
+      assert.equal(
+        micromark('::: {}\ncontent\n:::', options({'*': h})),
+        '<div>\n<p>content</p>\n</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a nameless container with class attribute',
+    async function () {
+      assert.equal(
+        micromark('::: {.note}\ncontent\n:::', options({'*': h})),
+        '<div class="note">\n<p>content</p>\n</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a nameless container without space before attributes',
+    async function () {
+      assert.equal(
+        micromark(':::{.note}\ncontent\n:::', options({'*': h})),
+        '<div class="note">\n<p>content</p>\n</div>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a nameless container with only closing fence',
+    async function () {
+      assert.equal(micromark('::: {.note}\n:::', options({'*': h})), '<div class="note"></div>')
+    }
+  )
+
+  await t.test(
+    'should not support bare three colons as a nameless container',
+    async function () {
+      assert.equal(micromark(':::\n:::', options({'*': h})), '<p>:::\n:::</p>')
+    }
+  )
 })
 
 test('micromark-extension-directive (compile)', async function (t) {
@@ -1860,7 +1964,8 @@ function h(d) {
     }
   }
 
-  this.tag('<' + d.name)
+  const tagName = d.name || (d.type === 'containerDirective' ? 'div' : 'span')
+  this.tag('<' + tagName)
   if (list.length > 0) this.tag(' ' + list.join(' '))
   this.tag('>')
 
@@ -1870,7 +1975,7 @@ function h(d) {
     if (d.type === 'containerDirective') this.lineEndingIfNeeded()
   }
 
-  if (!htmlVoidElements.includes(d.name)) this.tag('</' + d.name + '>')
+  if (!htmlVoidElements.includes(tagName)) this.tag('</' + tagName + '>')
 }
 
 /**

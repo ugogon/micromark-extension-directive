@@ -246,9 +246,7 @@ export function directiveHtml(options) {
     /** @type {boolean | undefined} */
     let result
 
-    assert(directive.name, 'expected `name`')
-
-    if (own.call(options_, directive.name)) {
+    if (directive.name && own.call(options_, directive.name)) {
       result = options_[directive.name].call(this, directive)
       found = result !== false
     }

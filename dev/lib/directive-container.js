@@ -4,7 +4,7 @@
 
 import {ok as assert} from 'devlop'
 import {factorySpace} from 'micromark-factory-space'
-import {markdownLineEnding} from 'micromark-util-character'
+import {asciiAlpha, markdownLineEnding} from 'micromark-util-character'
 import {codes, constants, types} from 'micromark-util-symbol'
 import {factoryAttributes} from './factory-attributes.js'
 import {factoryLabel} from './factory-label.js'
@@ -60,13 +60,26 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
     }
 
     effects.exit('directiveContainerSequence')
-    return factoryName.call(
-      self,
-      effects,
-      afterName,
-      nok,
-      'directiveContainerName'
-    )(code)
+    if (asciiAlpha(code)) {
+      return factoryName.call(
+        self,
+        effects,
+        afterName,
+        nok,
+        'directiveContainerName'
+      )(code)
+    }
+    // Nameless container (Pandoc fenced div): allow optional whitespace before label/attributes
+    return factorySpace(effects, afterNameless, types.whitespace)(code)
+  }
+
+  /** @type {State} */
+  function afterNameless(code) {
+    // Nameless containers require at least a label or attributes
+    if (code === codes.leftSquareBracket || code === codes.leftCurlyBrace) {
+      return afterName(code)
+    }
+    return nok(code)
   }
 
   /** @type {State} */
@@ -258,7 +271,6 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
           effects.exit('directiveContainerFence')
           return ok(code)
         } else {
-          console.log('expected '+sizeOpen+" closing colons, but got "+size)
           return nok(code)
         }
       }

@@ -3,6 +3,7 @@
  */
 
 import {ok as assert} from 'devlop'
+import {asciiAlpha} from 'micromark-util-character'
 import {codes, types} from 'micromark-util-symbol'
 import {factoryAttributes} from './factory-attributes.js'
 import {factoryLabel} from './factory-label.js'
@@ -46,7 +47,19 @@ function tokenizeDirectiveText(effects, ok, nok) {
     effects.enter('directiveTextMarker')
     effects.consume(code)
     effects.exit('directiveTextMarker')
-    return factoryName.call(self, effects, afterName, nok, 'directiveTextName')
+    return afterMarker
+  }
+
+  /** @type {State} */
+  function afterMarker(code) {
+    if (asciiAlpha(code)) {
+      return factoryName.call(self, effects, afterName, nok, 'directiveTextName')(code)
+    }
+    // Nameless text directive: :[label]{attrs}
+    if (code === codes.leftSquareBracket) {
+      return afterName(code)
+    }
+    return nok(code)
   }
 
   /** @type {State} */

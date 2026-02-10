@@ -8,8 +8,8 @@
 [![Backers][backers-badge]][collective]
 [![Chat][chat-badge]][chat]
 
-[micromark][] extensions to support [directives][prop] (`:cite[smith04]` and
-such).
+[micromark][] extensions to support [directives][prop] (`:cite[smith04]`,
+`[text]{.class}`, `::: {.note}`, and such).
 
 ## Contents
 
@@ -250,8 +250,8 @@ Containers (blocks with content) can form by using three colons:
 He dies.
 :::
 
-The `name` part is required.  The first character must be a letter, other
-characters can be alphanumerical, `-`, and `_`.
+The `name` part is required for leaf and text directives.  The first character
+must be a letter, other characters can be alphanumerical, `-`, and `_`.
 `-` or `_` cannot end a name.
 
 The `[label]` part is optional (`:x` and `:x[]` are equivalent)†.
@@ -269,28 +269,22 @@ they are combined: `{.red class=green .blue}` is equivalent to
 
 † there is one case where a name must be followed by an empty label or empty
 attributes: a *text* directive that only has a name, cannot be followed by a
-colon. So, `:red:` doesn’t work. Use either `:red[]` or `:red{}` instead.
+colon. So, `:red:` doesn't work. Use either `:red[]` or `:red{}` instead.
 The reason for this is to allow GitHub emoji (gemoji) and directives to coexist.
 
-Containers can be nested by using the same, more or less colons outside:
+Containers can be nested by using different numbers of colons:
 
 ::::spoiler
 He dies.
 
-::::spoiler
-She is born.
-::::
-
-:::::spoiler
-It is resurrected.
-:::::
-
 :::spoiler
-We are redeemed.
+She is born.
 :::
+
 ::::
 
-The closing fence must include the same or more colons as the opening.
+The closing fence must have exactly the same number of colons as its
+corresponding opening fence.
 If no closing is found, the container runs to the end of its parent container
 (block quote, list item, document, or other container).
 
@@ -298,19 +292,73 @@ If no closing is found, the container runs to the end of its parent container
 These three are not enough to close
 :::
 So this line is also part of the container.
+::::
 ```
+
+### Pandoc extensions
+
+This implementation also supports several [Pandoc][]-compatible extensions:
+
+#### Nameless containers (fenced divs)
+
+Container directives can omit the name when they include a label or attributes.
+This matches Pandoc's [fenced divs][] syntax:
+
+```markdown
+::: {.note}
+This is a note.
+:::
+
+::: {#myid .warning}
+This is a warning.
+:::
+```
+
+The label or attributes are required — bare `:::` without `[…]` or `{…}`
+is not recognized as a nameless container.
+
+#### Nameless text directives
+
+Text directives can omit the name. A colon followed directly by a label
+and attributes creates a nameless text directive:
+
+```markdown
+:[Underline]{.underline}
+```
+
+#### Bracketed spans
+
+Square brackets followed immediately by attributes create a bracketed span,
+matching Pandoc's [`bracketed_spans`][bracketed-spans] extension.
+No colon prefix is needed:
+
+```markdown
+[This is underlined]{.underline}
+
+[Important text]{#notice .highlight}
+```
+
+Bracketed spans produce the same AST nodes as nameless text directives.
+Regular links (`[text](url)`) still work — bracketed spans only activate
+when `{…}` follows the closing bracket.
+
+### Strictness
 
 Note that while other implementations are sometimes loose in what they allow,
 this implementation mimics CommonMark as closely as possible:
 
 * Whitespace is not allowed between colons and name (~~`: a`~~), name and
   label (~~`:a []`~~), name and attributes (~~`:a {}`~~), or label and
-  attributes (~~`:a[] {}`~~) — because it’s not allowed in links either
+  attributes (~~`:a[] {}`~~) — because it's not allowed in links either
   (~~`[] ()`~~)
 * No trailing colons allowed on the opening fence of a container
-  (~~`:::a:::`~~) — because it’s not allowed in fenced code either
+  (~~`:::a:::`~~) — because it's not allowed in fenced code either
 * The label and attributes in a leaf or container cannot include line endings
-  (~~`::a[b\nc]`~~) — because it’s not allowed in fenced code either
+  (~~`::a[b\nc]`~~) — because it's not allowed in fenced code either
+
+[pandoc]: https://pandoc.org
+[fenced-divs]: https://pandoc.org/MANUAL.html#divs-and-spans
+[bracketed-spans]: https://pandoc.org/MANUAL.html#divs-and-spans
 
 ## Types
 
