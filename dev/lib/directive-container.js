@@ -60,6 +60,12 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
     }
 
     effects.exit('directiveContainerSequence')
+    // Allow optional whitespace between colons and name/attributes (Pandoc-compatible)
+    return factorySpace(effects, afterSequence, types.whitespace)(code)
+  }
+
+  /** @type {State} */
+  function afterSequence(code) {
     if (asciiAlpha(code)) {
       return factoryName.call(
         self,
@@ -69,13 +75,7 @@ function tokenizeDirectiveContainer(effects, ok, nok) {
         'directiveContainerName'
       )(code)
     }
-    // Nameless container (Pandoc fenced div): allow optional whitespace before label/attributes
-    return factorySpace(effects, afterNameless, types.whitespace)(code)
-  }
-
-  /** @type {State} */
-  function afterNameless(code) {
-    // Nameless containers require at least a label or attributes
+    // Nameless container: require at least a label or attributes
     if (code === codes.leftSquareBracket || code === codes.leftCurlyBrace) {
       return afterName(code)
     }

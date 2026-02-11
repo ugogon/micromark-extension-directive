@@ -1429,6 +1429,36 @@ test('micromark-extension-directive (syntax, container)', async function (t) {
       assert.equal(micromark(':::\n:::', options({'*': h})), '<p>:::\n:::</p>')
     }
   )
+
+  await t.test(
+    'should support a space between colons and name',
+    async function () {
+      assert.equal(
+        micromark('::: spoiler\ncontent\n:::', options({'*': h})),
+        '<spoiler>\n<p>content</p>\n</spoiler>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support a space between colons and name with attributes',
+    async function () {
+      assert.equal(
+        micromark('::: spoiler{.hidden}\ncontent\n:::', options({'*': h})),
+        '<spoiler class="hidden">\n<p>content</p>\n</spoiler>'
+      )
+    }
+  )
+
+  await t.test(
+    'should support multiple spaces between colons and name',
+    async function () {
+      assert.equal(
+        micromark(':::  a\n:::', options({'*': h})),
+        '<a></a>'
+      )
+    }
+  )
 })
 
 test('micromark-extension-directive (compile)', async function (t) {

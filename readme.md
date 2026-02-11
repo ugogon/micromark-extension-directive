@@ -27,6 +27,8 @@
 * [HTML](#html)
 * [CSS](#css)
 * [Syntax](#syntax)
+  * [Pandoc extensions](#pandoc-extensions)
+  * [Strictness](#strictness)
 * [Types](#types)
 * [Compatibility](#compatibility)
 * [Security](#security)
@@ -302,7 +304,7 @@ This implementation also supports several [Pandoc][]-compatible extensions:
 #### Nameless containers (fenced divs)
 
 Container directives can omit the name when they include a label or attributes.
-This matches Pandoc's [fenced divs][] syntax:
+This matches Pandoc's \[fenced divs]\[] syntax:
 
 ```markdown
 ::: {.note}
@@ -357,7 +359,9 @@ this implementation mimics CommonMark as closely as possible:
   (~~`::a[b\nc]`~~) — because it's not allowed in fenced code either
 
 [pandoc]: https://pandoc.org
+
 [fenced-divs]: https://pandoc.org/MANUAL.html#divs-and-spans
+
 [bracketed-spans]: https://pandoc.org/MANUAL.html#divs-and-spans
 
 ## Types
